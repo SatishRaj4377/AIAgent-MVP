@@ -9,36 +9,62 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [DialogModule, FormsModule, CommonModule],
   template: `
-  <ejs-dialog header="Configure {{node?.id}}" [visible]="true" width="300px" (close)="onClose()" [showCloseIcon]="true" (overlayClick)="onClose()">
-    <div *ngIf="node">
-      <ng-container [ngSwitch]="node.id">
-        <!-- Azure Model -->
-        <div *ngSwitchCase="'azureModel'">
-          <label>Endpoint URL:</label>
-          <input [(ngModel)]="cfg.url" class="e-input" /><br/>
-          <label>Key:</label>
-          <input [(ngModel)]="cfg.key" class="e-input" type="password" />
-        </div>
-        <!-- Fetch API -->
-        <div *ngSwitchCase="'fetchApi'">
-          <label>API URL:</label>
-          <input [(ngModel)]="cfg.apiUrl" class="e-input" />
-        </div>
-        <!-- Agent & ChatTrigger could be extended -->
-        <div *ngSwitchDefault>
-          <p>No config needed</p>
-        </div>
-      </ng-container>
-    </div>
-    <div class="e-footer-content">
-      <button ejs-button cssClass="e-primary" (click)="onSave()">Save</button>
-    </div>
-  </ejs-dialog>
+    <ejs-dialog
+      header="Configure {{ node?.id }}"
+      [visible]="true"
+      width="300px"
+      (close)="onClose()"
+      [showCloseIcon]="true"
+      (overlayClick)="onClose()"
+    >
+      <div *ngIf="node">
+        <ng-container [ngSwitch]="node.id">
+
+          <!-- Azure Model -->
+          <div *ngSwitchCase="'azureModel'">
+            <label>Endpoint URL:</label>
+            <input [(ngModel)]="cfg.endpoint" class="e-input" /><br />
+            <label>Key:</label>
+            <input [(ngModel)]="cfg.key" class="e-input" type="password" />
+            <label>Model (Deployment) Name:</label>
+            <input [(ngModel)]="cfg.deploymentName" class="e-input" /><br />
+            <div class="e-footer-content">
+              <button ejs-button cssClass="e-primary" (click)="onSave()">
+                Save
+              </button>
+            </div>
+          </div>
+
+          <!-- Fetch API -->
+          <div *ngSwitchCase="'fetchApi'">
+            <label>API URL:</label>
+            <input [(ngModel)]="cfg.apiUrl" class="e-input" />
+            <div class="e-footer-content">
+              <button ejs-button cssClass="e-primary" (click)="onSave()">
+                Save
+              </button>
+            </div>
+          </div>
+
+          <!-- Agent & ChatTrigger could be extended -->
+          <div *ngSwitchDefault>
+            <p>No config needed</p>
+          </div>
+        </ng-container>
+      </div>
+    </ejs-dialog>
   `,
-  styles: [`.e-input { width:100%; margin-bottom:0.5rem; }`]
+  styles: [
+    `
+      .e-input {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    `,
+  ],
 })
 export class NodeConfigDialogComponent {
-  @Input() node!: NodeModel|null;
+  @Input() node!: NodeModel | null;
   @Output() save = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
 
