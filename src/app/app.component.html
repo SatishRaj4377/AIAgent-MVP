@@ -1,4 +1,8 @@
 <div class="container">
-  <aside class="chat-panel"><app-chat-window (chat)="onChat($event)"></app-chat-window></aside>
-  <main class="diagram-panel"><app-diagram [chatInput]="lastChat"></app-diagram></main>
+  <aside class="chat-panel">
+    <app-chat-window></app-chat-window>
+  </aside>
+  <main class="diagram-panel">
+    <app-diagram></app-diagram>
+  </main>
 </div>

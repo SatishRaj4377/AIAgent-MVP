@@ -19,6 +19,7 @@
     "@angular/router": "^19.2.0",
     "@syncfusion/ej2-angular-buttons": "^29.2.5",
     "@syncfusion/ej2-angular-diagrams": "^29.2.7",
+    "@syncfusion/ej2-angular-interactive-chat": "^29.2.4",
     "@syncfusion/ej2-angular-popups": "^29.2.7",
     "@syncfusion/ej2-base": "^29.2.4",
     "@syncfusion/ej2-buttons": "^29.2.5",

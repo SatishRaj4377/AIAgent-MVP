@@ -1,3 +1,7 @@
-<h3>Chat Trigger</h3>
-<input #chatBox class="e-input" placeholder="Type your query" />
-<button ejs-button (click)="send(chatBox.value)">Send</button>
+<div  ejs-aiassistview
+  #aiAssistViewComponent
+  (promptRequest)="onPromptRequest($event)"
+  [promptPlaceholder]="'Type your query here...'"
+  [width]="'100%'"
+  [height]="'100%'"
+></div>
