@@ -1,5 +1,9 @@
 import { Component, ViewChild } from '@angular/core';
-import { AIAssistViewComponent, AIAssistViewModule, PromptRequestEventArgs } from '@syncfusion/ej2-angular-interactive-chat';
+import {
+  AIAssistViewComponent,
+  AIAssistViewModule,
+  PromptRequestEventArgs,
+} from '@syncfusion/ej2-angular-interactive-chat';
 import { AzureOpenAIService } from '../services/azure-open-aiservice.service';
 import { ConfigService } from '../services/config.service';
 
@@ -17,34 +21,60 @@ export class ChatWindowComponent {
     private azureService: AzureOpenAIService,
     private configService: ConfigService
   ) {}
-
-  public onPromptRequest(args: PromptRequestEventArgs): void {
-    const prompt = args.prompt;
+  public async onPromptRequest(args: PromptRequestEventArgs): Promise<void> {
+    const prompt = args.prompt?.trim();
+    if (!prompt) return;
 
     const azure = this.configService.get('azureModel');
     const api = this.configService.get('fetchApi');
+    const agent = this.configService.get('agent');
+    const systemMessage =
+      agent?.systemMessage?.trim() || 'You are an AI assistant.';
 
-    if (!azure?.endpoint || !azure?.key || !azure?.deploymentName || !api?.apiUrl) {
-      this.aiAssistViewComponent.addPromptResponse('Please configure Azure and Fetch API nodes properly.');
+    if (!azure?.endpoint || !azure?.key || !azure?.deploymentName) {
+      this.aiAssistViewComponent.addPromptResponse(
+        'Please configure Azure OpenAI properly.'
+      );
       return;
     }
 
-    fetch(api.apiUrl)
-      .then((res) => res.json())
-      .then((apiData) => {
-        const context = `You are an AI agent. Based on the following API data:\n\n${JSON.stringify(apiData, null, 2)}\n\nUser query: ${prompt}`;
-        return this.azureService.generateResponse(context, {
-          endpoint: azure.endpoint,
-          key: azure.key,
-          deploymentName: azure.deploymentName,
-        });
-      })
-      .then((response) => {
-        this.aiAssistViewComponent.addPromptResponse(response);
-      })
-      .catch((err) => {
-        console.error('AI Chat Error:', err);
-        this.aiAssistViewComponent.addPromptResponse('Something went wrong while processing your chat.');
+    let toolContext = '';
+    try {
+      if (api?.apiUrl) {
+        const apiData = await fetch(api.apiUrl).then((r) => r.json());
+        toolContext += `Tool: Fetch API\nData:\n${JSON.stringify(
+          apiData,
+          null,
+          2
+        )}\n\n`;
+      }
+
+      // Future placeholder: Excel, DB, etc.
+      // if (excel?.sheetUrl) { ... }
+    } catch (err) {
+      console.error('Error fetching tool data:', err);
+      this.aiAssistViewComponent.addPromptResponse(
+        'Error while fetching tool data.'
+      );
+      return;
+    }
+
+    // Compose full AI context
+    const fullContext = `${systemMessage}\n\n${toolContext}User query: ${prompt}`;
+
+    try {
+      const response = await this.azureService.generateResponse(fullContext, {
+        endpoint: azure.endpoint,
+        key: azure.key,
+        deploymentName: azure.deploymentName,
       });
+
+      this.aiAssistViewComponent.addPromptResponse(response);
+    } catch (err) {
+      console.error('Azure AI error:', err);
+      this.aiAssistViewComponent.addPromptResponse(
+        'Something went wrong while processing your chat.'
+      );
+    }
   }
 }

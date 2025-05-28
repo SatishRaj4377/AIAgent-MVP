@@ -19,7 +19,6 @@ import { CommonModule } from '@angular/common';
     >
       <div *ngIf="node">
         <ng-container [ngSwitch]="node.id">
-
           <!-- Azure Model -->
           <div *ngSwitchCase="'azureModel'">
             <label>Endpoint URL:</label>
@@ -39,6 +38,21 @@ import { CommonModule } from '@angular/common';
           <div *ngSwitchCase="'fetchApi'">
             <label>API URL:</label>
             <input [(ngModel)]="cfg.apiUrl" class="e-input" />
+            <div class="e-footer-content">
+              <button ejs-button cssClass="e-primary" (click)="onSave()">
+                Save
+              </button>
+            </div>
+          </div>
+
+          <!-- Agent -->
+          <div *ngSwitchCase="'agent'">
+            <label>System Message:</label>
+            <textarea
+              [(ngModel)]="cfg.systemMessage"
+              rows="5"
+              class="e-input"
+            ></textarea>
             <div class="e-footer-content">
               <button ejs-button cssClass="e-primary" (click)="onSave()">
                 Save
