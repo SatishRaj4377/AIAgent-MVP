@@ -1,0 +1,14 @@
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.chat-panel {
+    width: 300px;
+    border-right: 1px solid #ccc;
+    padding: 1rem;
+}
+
+.diagram-panel {
+    flex: 1;
+}

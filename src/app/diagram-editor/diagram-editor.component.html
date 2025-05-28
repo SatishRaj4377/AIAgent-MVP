@@ -1,0 +1,16 @@
+<ejs-diagram 
+  #diagram
+  id="diagram" 
+  width="100%" height="100%" 
+  [nodes]="nodes" 
+  [connectors]="connectors" 
+  (click)="onNodeClick($event)"
+  (created)="diagramCreated($event)"
+></ejs-diagram>
+
+<app-node-config-dialog 
+  *ngIf="showDialog" 
+  [node]="selectedNode" 
+  (save)="saveConfig($event)" 
+  (close)="showDialog=false">
+</app-node-config-dialog>
