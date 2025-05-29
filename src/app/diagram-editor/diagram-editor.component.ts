@@ -57,7 +57,7 @@ export class DiagramEditorComponent implements OnChanges {
       height: 80,
       offsetX: 150,
       offsetY: 150,
-      shape: { type: 'Flow', shape: 'Terminator' },
+      shape: { type: 'Path', data: 'M 40 0 Q 0 0 0 40 L 0 60 Q 0 100 40 100 L 90 100 Q 100 100 100 90 L 100 10 Q 100 0 90 0 Z' },
       annotations: [{ content: 'Chat\nTrigger' }],
     });
 

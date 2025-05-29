@@ -1,15 +1,14 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { ChatWindowComponent } from './chat-window/chat-window.component';
 import { DiagramEditorComponent } from './diagram-editor/diagram-editor.component';
-import { ConfigService } from './services/config.service';
-import { AzureOpenAIService } from './services/azure-open-aiservice.service';
+import { PaletteComponent } from './palette/palette.component';
 
 @Component({
   selector: 'app-root',
-  imports: [ChatWindowComponent, DiagramEditorComponent],
+  imports: [ChatWindowComponent, DiagramEditorComponent, PaletteComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
+  encapsulation: ViewEncapsulation.None
 })
 export class AppComponent {
 }
