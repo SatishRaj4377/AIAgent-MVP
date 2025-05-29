@@ -1,7 +1,13 @@
 <div ejs-aiassistview
   #aiAssistViewComponent
+  name="Chat Trigger"
   (promptRequest)="onPromptRequest($event)"
   [promptPlaceholder]="'Type your query here...'"
   [width]="'100%'"
   [height]="'100%'"
-></div>
+>
+
+<e-views>
+  <e-view type="Assist" name="Chat Trigger"></e-view>
+</e-views>
+</div>

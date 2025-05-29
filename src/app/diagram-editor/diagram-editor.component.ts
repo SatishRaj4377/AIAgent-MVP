@@ -17,6 +17,7 @@ import {
   Diagram,
   ConnectorModel,
   NodeConstraints,
+  AnnotationConstraints,
 } from '@syncfusion/ej2-angular-diagrams';
 import { ConfigService } from '../services/config.service';
 import { NodeConfigDialogComponent } from './node-config-dialog.component';
@@ -28,7 +29,7 @@ import { NodeState, WorkflowService } from '../services/workflow.service';
   imports: [DiagramModule, NodeConfigDialogComponent, CommonModule, NgIf],
   templateUrl: './diagram-editor.component.html',
   styleUrl: './diagram-editor.component.css',
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
 export class DiagramEditorComponent
   implements OnChanges, OnInit, AfterViewInit
@@ -44,16 +45,25 @@ export class DiagramEditorComponent
       id: 'modelPort',
       offset: { x: 0.3, y: 1 },
       visibility: PortVisibility.Visible,
+      shape: 'Circle',
+      style: {
+        fill: 'gray',
+        strokeColor: 'transparent',
+      },
     },
     {
       id: 'toolPort',
       offset: { x: 0.7, y: 1 },
       visibility: PortVisibility.Visible,
+      shape: 'Circle',
+      style: {
+        fill: 'gray',
+        strokeColor: 'transparent',
+      },
     },
     {
       id: 'chatPort',
       offset: { x: 0, y: 0.5 },
-      visibility: PortVisibility.Visible,
     },
   ];
   nodeConfig: any = {};
@@ -105,8 +115,23 @@ export class DiagramEditorComponent
       height: 100,
       offsetX: 400,
       offsetY: 150,
+      shape: { type: 'Basic', shape: 'Rectangle', cornerRadius: 10 },
       annotations: [
-        { content: 'Agent', style: { color: 'white', fontSize: 14 } },
+        {
+          content: 'AI Agent',
+          style: { color: 'white', fontSize: 14 },
+          offset: { x: 0.5, y: 0.4 },
+        },
+        {
+          content: 'Chat Model',
+          style: { color: '#e3e3e3', fontSize: 11 },
+          offset: { x: 0.3, y: 0.8 },
+        },
+        {
+          content: 'Tools',
+          style: { color: '#e3e3e3', fontSize: 11 },
+          offset: { x: 0.7, y: 0.8 },
+        },
       ],
       style: { fill: '#333' },
       ports: this.ports,
@@ -117,7 +142,7 @@ export class DiagramEditorComponent
       id: 'azureModel',
       width: 80,
       height: 80,
-      offsetX: 400,
+      offsetX: 200,
       offsetY: 300,
       shape: { type: 'Basic', shape: 'Ellipse' },
       annotations: [{ content: 'Azure\nOpenAI', style: { color: '#0078D4' } }],
@@ -128,10 +153,21 @@ export class DiagramEditorComponent
       id: 'fetchApi',
       width: 80,
       height: 80,
-      offsetX: 600,
+      offsetX: 400,
       offsetY: 300,
       shape: { type: 'Basic', shape: 'Ellipse' },
       annotations: [{ content: 'Fetch\nAPI', style: { fontSize: 12 } }],
+    });
+
+    // Scheduler Node
+    this.nodes.push({
+      id: 'scheduler',
+      width: 80,
+      height: 80,
+      offsetX: 600,
+      offsetY: 300,
+      shape: { type: 'Basic', shape: 'Ellipse' },
+      annotations: [{ content: 'Scheduler', style: { fontSize: 12 } }],
     });
 
     this.connectors = [
@@ -156,6 +192,13 @@ export class DiagramEditorComponent
         targetID: 'agent',
         type: 'Bezier',
       },
+      {
+        id: 'schedulerConn',
+        sourceID: 'agent',
+        sourcePortID: 'toolPort',
+        targetID: 'scheduler',
+        type: 'Bezier',
+      },
     ];
   }
 
@@ -163,11 +206,14 @@ export class DiagramEditorComponent
     node.constraints =
       (NodeConstraints.Default & ~NodeConstraints.Rotate) |
       NodeConstraints.HideThumbs;
+    node.annotations?.forEach((annotation) => {
+      annotation.constraints = AnnotationConstraints.ReadOnly;
+    });
     return node;
   }
 
   onNodeClick(args: any): void {
-    if (args.count === 2 && args.element && args.actualObject) {
+    if (args.count === 2 && args.element && args.actualObject && args.element.id != "chatTrigger") {
       this.selectedNode = args.element;
       this.nodeConfig = this.configService.get(args.element.id!) || {};
       this.showDialog = true;
@@ -187,20 +233,19 @@ export class DiagramEditorComponent
     this.selectedNode = null;
   }
 
-applyNodeVisualState(state: NodeState): void {
+  applyNodeVisualState(state: NodeState): void {
     const node = this.diagram?.getObject(state.id) as NodeModel;
     if (!node) return;
 
     const colorMap: Record<NodeState['status'], string> = {
       idle: '#333',
-      loading: '#ffe082',  // yellow
-      done: '#4caf50',     // green
-      error: '#e57373'     // red
+      loading: '#ffe082', // yellow
+      done: '#4caf50', // green
+      error: '#e57373', // red
     };
 
     node.style = node.style || {};
     node.style.fill = colorMap[state.status];
     this.diagram?.dataBind();
   }
-
 }

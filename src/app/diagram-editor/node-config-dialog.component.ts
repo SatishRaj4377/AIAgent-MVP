@@ -1,19 +1,39 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { NodeModel } from '@syncfusion/ej2-angular-diagrams';
-import { DialogComponent, DialogModule } from '@syncfusion/ej2-angular-popups';
+import { DialogModule } from '@syncfusion/ej2-angular-popups';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ScheduleComponent, ScheduleModule, DayService, WeekService, WorkWeekService, MonthService, AgendaService, ResizeService, DragAndDropService, } from '@syncfusion/ej2-angular-schedule';
+import { ButtonComponent, ButtonModule } from '@syncfusion/ej2-angular-buttons';
 
 @Component({
   selector: 'app-node-config-dialog',
   standalone: true,
-  imports: [DialogModule, FormsModule, CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DialogModule,
+    ScheduleModule,
+    ButtonModule,
+  ],
+  providers: [
+    DayService,
+    WeekService,
+    WorkWeekService,
+    MonthService,
+    AgendaService,
+    ResizeService,
+    DragAndDropService,
+  ],
   template: `
     <ejs-dialog
-      header="Configure {{ node?.id }}"
-      [visible]="true"
+      [header]="dialogHeader"
+      allowDragging="true"
       width="300px"
+      [visible]="true"
+      [width]="dialogWidth"
       (close)="onClose()"
+      [isModal]="true"
       [showCloseIcon]="true"
       (overlayClick)="onClose()"
     >
@@ -60,6 +80,25 @@ import { CommonModule } from '@angular/common';
             </div>
           </div>
 
+          <!-- Scheduler -->
+          <div *ngSwitchCase="'scheduler'">
+            <ejs-schedule
+              #schedulerObj
+              width="100%"
+              height="400px"
+              [selectedDate]="selectedDate"
+              [currentView]="'Day'"
+              [eventSettings]="{ dataSource: localEvents }"
+            >
+            </ejs-schedule>
+
+            <div class="e-footer-content">
+              <button ejs-button cssClass="e-primary" (click)="onSave()">
+                Save
+              </button>
+            </div>
+          </div>
+
           <!-- Agent & ChatTrigger could be extended -->
           <div *ngSwitchDefault>
             <p>No config needed</p>
@@ -81,17 +120,54 @@ export class NodeConfigDialogComponent {
   @Input() node!: NodeModel | null;
   @Output() save = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
+  @ViewChild('schedulerObj') schedulerObj!: ScheduleComponent;
 
-  cfg: any = {};
+  cfg: any = { events: [] };
+  localEvents: any[] = [];
+  selectedDate: Date = new Date();
 
-  ngOnInit() {
-    // load existing if any
-    this.cfg = this.node?.addInfo || {};
+  ngOnInit(): void {
+    if (!this.node) return;
+
+    this.cfg = Object.assign({}, this.node.addInfo || {});
+    if (this.node.id === 'scheduler') {
+      this.localEvents = [...(this.cfg.events || [])];
+      if (this.schedulerObj) {
+        this.schedulerObj.eventSettings = { dataSource: this.localEvents };
+      }
+    }
   }
 
-  onSave() {
+  get dialogWidth(): string {
+    return this.node?.id === 'scheduler' ? '85%' : '400px';
+  }
+
+  get dialogHeader(): string {
+    switch (this.node?.id) {
+      case 'agent':
+        return 'Configure Agent';
+      case 'fetchApi':
+        return 'Configure HTTP Request';
+      case 'azureModel':
+        return 'Configure Azure OpenAI';
+      case 'scheduler':
+        return 'Configure Scheduler';
+      default:
+        return 'Configure Node';
+    }
+  }
+
+  onSave(): void {
+    if (this.node?.id === 'scheduler') {
+      this.cfg.events = [...this.localEvents];
+      if (this.schedulerObj) {
+        this.schedulerObj.eventSettings.dataSource = this.localEvents;
+        this.schedulerObj.refreshEvents();
+      }
+    }
     this.save.emit(this.cfg);
   }
+
   onClose() {
     this.close.emit();
   }

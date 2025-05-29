@@ -74,6 +74,16 @@ export class ChatWindowComponent {
           this.workflowService.setNodeState(tool.id, 'error');
         }
       }
+      if (tool.id === 'scheduler' && toolCfg?.events?.length > 0) {
+        const plans = toolCfg.events
+          .map(
+            (e: any, i: number) =>
+              `• ${e.Subject} on ${new Date(e.StartTime).toLocaleString()}`
+          )
+          .join('\n');
+        toolContext.push(`Tool: Scheduler\nScheduled Plans:\n${plans}`);
+        this.workflowService.setNodeState(tool.id, 'done');
+      }
     }
 
     const context = `${
