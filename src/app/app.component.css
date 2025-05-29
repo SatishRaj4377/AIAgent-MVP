@@ -17,9 +17,17 @@
     flex-direction: column;
     height: 100%;
     background-color: #f7f7f7;
+    gap: 1rem;
 }
 
 .right-panel {
     grid-column: 2;
     grid-row: 1;
+}
+
+app-chat-window{
+    height: 65%;
+}
+app-palette{
+    height: 35%;
 }

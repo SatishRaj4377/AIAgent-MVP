@@ -1,23 +1,44 @@
-import { Component, Input, OnChanges, ViewChild } from '@angular/core';
-import { DiagramModule, NodeModel, PointPortModel, PortVisibility, DiagramTools, DiagramComponent, Diagram, ConnectorModel, NodeConstraints } from '@syncfusion/ej2-angular-diagrams';
+import {
+  AfterViewInit,
+  Component,
+  Input,
+  OnChanges,
+  OnInit,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
+import {
+  DiagramModule,
+  NodeModel,
+  PointPortModel,
+  PortVisibility,
+  DiagramTools,
+  DiagramComponent,
+  Diagram,
+  ConnectorModel,
+  NodeConstraints,
+} from '@syncfusion/ej2-angular-diagrams';
 import { ConfigService } from '../services/config.service';
 import { NodeConfigDialogComponent } from './node-config-dialog.component';
 import { CommonModule, NgIf } from '@angular/common';
+import { NodeState, WorkflowService } from '../services/workflow.service';
 
 @Component({
   selector: 'app-diagram',
   imports: [DiagramModule, NodeConfigDialogComponent, CommonModule, NgIf],
   templateUrl: './diagram-editor.component.html',
   styleUrl: './diagram-editor.component.css',
+  encapsulation: ViewEncapsulation.None
 })
-export class DiagramEditorComponent implements OnChanges {
+export class DiagramEditorComponent
+  implements OnChanges, OnInit, AfterViewInit
+{
   @Input() chatInput!: string;
   @ViewChild('diagram') public diagram?: DiagramComponent;
 
   public tools: DiagramTools = DiagramTools.Default | DiagramTools.ZoomPan;
   public nodes: NodeModel[] = [];
   public connectors: ConnectorModel[] = [];
-  nodeConfig: any = {};
   public ports: PointPortModel[] = [
     {
       id: 'modelPort',
@@ -35,19 +56,31 @@ export class DiagramEditorComponent implements OnChanges {
       visibility: PortVisibility.Visible,
     },
   ];
-
+  nodeConfig: any = {};
+  executingNodes: Set<string> = new Set();
   selectedNode: NodeModel | null = null;
   showDialog = false;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private workflowService: WorkflowService
+  ) {
     this.initNodes();
   }
 
+  ngOnInit() {
+    this.workflowService.nodeStates$.subscribe((states) => {
+      states.forEach((state) => this.applyNodeVisualState(state));
+    });
+  }
   ngOnChanges() {
     if (this.chatInput) {
-      // TODO: trigger your agent-runner here
       console.log('ChatTrigger fired:', this.chatInput);
     }
+  }
+
+  ngAfterViewInit(): void {
+    this.workflowService.registerDiagram(this.diagram as any);
   }
 
   initNodes() {
@@ -153,4 +186,21 @@ export class DiagramEditorComponent implements OnChanges {
     this.showDialog = false;
     this.selectedNode = null;
   }
+
+applyNodeVisualState(state: NodeState): void {
+    const node = this.diagram?.getObject(state.id) as NodeModel;
+    if (!node) return;
+
+    const colorMap: Record<NodeState['status'], string> = {
+      idle: '#333',
+      loading: '#ffe082',  // yellow
+      done: '#4caf50',     // green
+      error: '#e57373'     // red
+    };
+
+    node.style = node.style || {};
+    node.style.fill = colorMap[state.status];
+    this.diagram?.dataBind();
+  }
+
 }
