@@ -5,7 +5,8 @@
   [nodes]="nodes" 
   [connectors]="connectors" 
   (click)="onNodeClick($event)"
-  (created)="diagramCreated($event)"
+  [tool]='tools'
+  [getNodeDefaults]="getNodeDefaults.bind(this)" 
 ></ejs-diagram>
 
 <app-node-config-dialog 

@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, ViewChild } from '@angular/core';
-import { DiagramModule, NodeModel, PointPortModel, PortVisibility, DiagramTools, DiagramComponent, Diagram, ConnectorModel } from '@syncfusion/ej2-angular-diagrams';
+import { DiagramModule, NodeModel, PointPortModel, PortVisibility, DiagramTools, DiagramComponent, Diagram, ConnectorModel, NodeConstraints } from '@syncfusion/ej2-angular-diagrams';
 import { ConfigService } from '../services/config.service';
 import { NodeConfigDialogComponent } from './node-config-dialog.component';
 import { CommonModule, NgIf } from '@angular/common';
@@ -12,11 +12,12 @@ import { CommonModule, NgIf } from '@angular/common';
 })
 export class DiagramEditorComponent implements OnChanges {
   @Input() chatInput!: string;
-  @ViewChild("diagram") public diagram?: DiagramComponent;
+  @ViewChild('diagram') public diagram?: DiagramComponent;
 
+  public tools: DiagramTools = DiagramTools.Default | DiagramTools.ZoomPan;
   public nodes: NodeModel[] = [];
   public connectors: ConnectorModel[] = [];
-  nodeConfig: any = {}
+  nodeConfig: any = {};
   public ports: PointPortModel[] = [
     {
       id: 'modelPort',
@@ -57,7 +58,10 @@ export class DiagramEditorComponent implements OnChanges {
       height: 80,
       offsetX: 150,
       offsetY: 150,
-      shape: { type: 'Path', data: 'M 40 0 Q 0 0 0 40 L 0 60 Q 0 100 40 100 L 90 100 Q 100 100 100 90 L 100 10 Q 100 0 90 0 Z' },
+      shape: {
+        type: 'Path',
+        data: 'M 40 0 Q 0 0 0 40 L 0 60 Q 0 100 40 100 L 90 100 Q 100 100 100 90 L 100 10 Q 100 0 90 0 Z',
+      },
       annotations: [{ content: 'Chat\nTrigger' }],
     });
 
@@ -122,8 +126,11 @@ export class DiagramEditorComponent implements OnChanges {
     ];
   }
 
-  diagramCreated(args: Object): void {
-    (this.diagram as Diagram).tool = DiagramTools.ZoomPan | DiagramTools.SingleSelect;
+  getNodeDefaults(node: NodeModel) {
+    node.constraints =
+      (NodeConstraints.Default & ~NodeConstraints.Rotate) |
+      NodeConstraints.HideThumbs;
+    return node;
   }
 
   onNodeClick(args: any): void {
@@ -134,7 +141,7 @@ export class DiagramEditorComponent implements OnChanges {
     }
   }
 
- saveConfig(cfg: any) {
+  saveConfig(cfg: any) {
     if (this.selectedNode) {
       this.configService.save(this.selectedNode.id!, cfg);
       this.selectedNode.addInfo = cfg;
@@ -146,5 +153,4 @@ export class DiagramEditorComponent implements OnChanges {
     this.showDialog = false;
     this.selectedNode = null;
   }
-
 }
