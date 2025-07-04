@@ -170,6 +170,17 @@ export class DiagramEditorComponent
       annotations: [{ content: 'Scheduler', style: { fontSize: 12 } }],
     });
 
+    // SpreadSheet Node
+    this.nodes.push({
+      id: 'spreadsheet',
+      width: 80,
+      height: 80,
+      offsetX: 800,
+      offsetY: 300,
+      shape: { type: 'Basic', shape: 'Ellipse' },
+      annotations: [{ content: 'Spreadsheet', style: { fontSize: 12 } }],
+    });
+
     this.connectors = [
       {
         id: 'modelConn',
@@ -197,6 +208,13 @@ export class DiagramEditorComponent
         sourceID: 'agent',
         sourcePortID: 'toolPort',
         targetID: 'scheduler',
+        type: 'Bezier',
+      },
+      {
+        id: 'spreadsheetConn',
+        sourceID: 'agent',
+        sourcePortID: 'toolPort',
+        targetID: 'spreadsheet',
         type: 'Bezier',
       },
     ];

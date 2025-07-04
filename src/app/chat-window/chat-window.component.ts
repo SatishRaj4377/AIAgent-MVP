@@ -84,6 +84,43 @@ export class ChatWindowComponent {
         toolContext.push(`Tool: Scheduler\nScheduled Plans:\n${plans}`);
         this.workflowService.setNodeState(tool.id, 'done');
       }
+      if (
+        tool.id === 'spreadsheet' &&
+        toolCfg?.spreadsheetData?.jsonObject?.Workbook?.sheets
+      ) {
+        const sheets = toolCfg.spreadsheetData.jsonObject.Workbook.sheets;
+
+        const sheetText: string[] = [];
+
+        for (const sheet of sheets) {
+          const rows = sheet.rows || [];
+          const lines: string[] = [];
+
+          for (const row of rows) {
+            const cells = row.cells || [];
+            const cellValues = cells
+              .map((cell: any) => cell?.value ?? '')
+              .filter((v:string) => v !== '');
+            if (cellValues.length > 0) {
+              lines.push(cellValues.join(' | '));
+            }
+          }
+
+          if (lines.length > 0) {
+            sheetText.push(
+              `Sheet: ${sheet.name || 'Unnamed'}\n${lines.join('\n')}`
+            );
+          }
+        }
+
+        if (sheetText.length > 0) {
+          toolContext.push(`Tool: Spreadsheet\n${sheetText.join('\n\n')}`);
+        } else {
+          toolContext.push(`Tool: Spreadsheet\n(No visible data)`);
+        }
+
+        this.workflowService.setNodeState(tool.id, 'done');
+      }
     }
 
     const context = `${
