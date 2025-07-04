@@ -38,6 +38,9 @@ export class DiagramEditorComponent
   @ViewChild('diagram') public diagram?: DiagramComponent;
 
   public tools: DiagramTools = DiagramTools.Default | DiagramTools.ZoomPan;
+  public scrollSettings = {
+      scrollLimit: 'Infinity',
+  }
   public nodes: NodeModel[] = [];
   public connectors: ConnectorModel[] = [];
   public ports: PointPortModel[] = [
