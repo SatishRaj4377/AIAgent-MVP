@@ -267,138 +267,143 @@ and Base all responses on the actual data provided through the connected tools (
     }
 
     // Add default scheduler events for financial planning
-    if (this.node.id === 'scheduler' && (!this.cfg.events || this.cfg.events.length === 0)) {
-        this.cfg.events = [
-            // Monthly Recurring Events - July 2025
-            {
-              Id: 1,
-              Subject: 'Monthly Budget Review',
-              StartTime: new Date(2025, 6, 1, 9, 0), // July 1st, 2025
-              EndTime: new Date(2025, 6, 1, 10, 0),
-              IsAllDay: false,
-              Category: 'Planning',
-              Description: 'Review monthly spending and adjust budget categories'
-            },
-            {
-              Id: 2,
-              Subject: 'Rent Payment Due',
-              StartTime: new Date(2025, 6, 1, 8, 0), // July 1st, 2025
-              EndTime: new Date(2025, 6, 1, 8, 30),
-              IsAllDay: false,
-              Category: 'Bills',
-              Description: 'Monthly rent payment - $1,200'
-            },
-            {
-              Id: 3,
-              Subject: 'Credit Card Payment Due - Chase',
-              StartTime: new Date(2025, 6, 15, 10, 0), // July 15th, 2025
-              EndTime: new Date(2025, 6, 15, 10, 30),
-              IsAllDay: false,
-              Category: 'Bills',
-              Description: 'Minimum payment due: $150'
-            },
-            {
-              Id: 4,
-              Subject: 'Electricity Bill Due - PG&E',
-              StartTime: new Date(2025, 6, 20, 11, 0), // July 20th, 2025
-              EndTime: new Date(2025, 6, 20, 11, 15),
-              IsAllDay: false,
-              Category: 'Bills',
-              Description: 'Average monthly bill: $180'
-            },
-            {
-              Id: 5,
-              Subject: 'Car Insurance Payment',
-              StartTime: new Date(2025, 6, 25, 9, 0), // July 25th, 2025
-              EndTime: new Date(2025, 6, 25, 9, 15),
-              IsAllDay: false,
-              Category: 'Bills',
-              Description: 'Auto insurance premium: $120'
-            },
-            {
-              Id: 6,
-              Subject: 'Investment Portfolio Review',
-              StartTime: new Date(2025, 6, 28, 14, 0), // July 28th, 2025
-              EndTime: new Date(2025, 6, 28, 15, 0),
-              IsAllDay: false,
-              Category: 'Planning',
-              Description: 'Quarterly review of investment performance'
-            },
-            // Weekly Events
-            {
-              Id: 7,
-              Subject: 'Grocery Shopping Budget Check',
-              StartTime: new Date(2025, 6, 3, 10, 0), // July 3rd, 2025
-              EndTime: new Date(2025, 6, 3, 10, 30),
-              IsAllDay: false,
-              Category: 'Planning',
-              Description: 'Weekly grocery budget: $85'
-            },
-            {
-              Id: 8,
-              Subject: 'Expense Tracking Update',
-              StartTime: new Date(2025, 6, 7, 19, 0), // July 7th, 2025
-              EndTime: new Date(2025, 6, 7, 19, 30),
-              IsAllDay: false,
-              Category: 'Planning',
-              Description: 'Update expense spreadsheet with weekly transactions'
-            },
-            {
-              Id: 9,
-              Subject: 'Mid-Year Financial Review',
-              StartTime: new Date(2025, 6, 15, 9, 0), // July 15th, 2025
-              EndTime: new Date(2025, 6, 15, 17, 0),
-              IsAllDay: true,
-              Category: 'Planning',
-              Description: 'Comprehensive mid-year financial assessment'
-            },
-            {
-              Id: 10,
-              Subject: 'Emergency Fund Goal Check',
-              StartTime: new Date(2025, 6, 14, 15, 0), // July 14th, 2025
-              EndTime: new Date(2025, 6, 14, 15, 30),
-              IsAllDay: false,
-              Category: 'Savings',
-              Description: 'Review progress toward $10,000 emergency fund goal'
-            },
-            {
-              Id: 11,
-              Subject: 'Subscription Audit',
-              StartTime: new Date(2025, 6, 10, 16, 0), // July 10th, 2025
-              EndTime: new Date(2025, 6, 10, 17, 0),
-              IsAllDay: false,
-              Category: 'Planning',
-              Description: 'Review all monthly subscriptions and cancel unused ones'
-            },
-            {
-              Id: 12,
-              Subject: 'Salary Direct Deposit',
-              StartTime: new Date(2025, 6, 1, 0, 0), // July 1st, 2025
-              EndTime: new Date(2025, 6, 1, 23, 59),
-              IsAllDay: true,
-              Category: 'Income',
-              Description: 'Monthly salary deposit: $2,500'
-            },
-            {
-              Id: 13,
-              Subject: 'Summer Vacation Budget Planning',
-              StartTime: new Date(2025, 6, 5, 10, 0), // July 5th, 2025
-              EndTime: new Date(2025, 6, 5, 11, 0),
-              IsAllDay: false,
-              Category: 'Planning',
-              Description: 'Plan and budget for summer vacation expenses'
-            },
-            {
-              Id: 14,
-              Subject: 'Quarterly Tax Payment Due',
-              StartTime: new Date(2025, 6, 31, 12, 0), // July 31st, 2025
-              EndTime: new Date(2025, 6, 31, 12, 30),
-              IsAllDay: false,
-              Category: 'Tax',
-              Description: 'Q2 estimated tax payment deadline'
-            }
-        ];
-        this.localEvents = [...(this.cfg.events || [])];
+    if (this.node.id === 'scheduler') {
+        // Load existing events or set defaults
+        if (this.cfg.events && this.cfg.events.length > 0) {
+            this.localEvents = [...this.cfg.events];
+        } else {
+            this.cfg.events = [
+                // Monthly Recurring Events - July 2025
+                {
+                  Id: 1,
+                  Subject: 'Monthly Budget Review',
+                  StartTime: new Date(2025, 6, 1, 9, 0), // July 1st, 2025
+                  EndTime: new Date(2025, 6, 1, 10, 0),
+                  IsAllDay: false,
+                  Category: 'Planning',
+                  Description: 'Review monthly spending and adjust budget categories'
+                },
+                {
+                  Id: 2,
+                  Subject: 'Rent Payment Due',
+                  StartTime: new Date(2025, 6, 1, 8, 0), // July 1st, 2025
+                  EndTime: new Date(2025, 6, 1, 8, 30),
+                  IsAllDay: false,
+                  Category: 'Bills',
+                  Description: 'Monthly rent payment - $1,200'
+                },
+                {
+                  Id: 3,
+                  Subject: 'Credit Card Payment Due - Chase',
+                  StartTime: new Date(2025, 6, 15, 10, 0), // July 15th, 2025
+                  EndTime: new Date(2025, 6, 15, 10, 30),
+                  IsAllDay: false,
+                  Category: 'Bills',
+                  Description: 'Minimum payment due: $150'
+                },
+                {
+                  Id: 4,
+                  Subject: 'Electricity Bill Due - PG&E',
+                  StartTime: new Date(2025, 6, 20, 11, 0), // July 20th, 2025
+                  EndTime: new Date(2025, 6, 20, 11, 15),
+                  IsAllDay: false,
+                  Category: 'Bills',
+                  Description: 'Average monthly bill: $180'
+                },
+                {
+                  Id: 5,
+                  Subject: 'Car Insurance Payment',
+                  StartTime: new Date(2025, 6, 25, 9, 0), // July 25th, 2025
+                  EndTime: new Date(2025, 6, 25, 9, 15),
+                  IsAllDay: false,
+                  Category: 'Bills',
+                  Description: 'Auto insurance premium: $120'
+                },
+                {
+                  Id: 6,
+                  Subject: 'Investment Portfolio Review',
+                  StartTime: new Date(2025, 6, 28, 14, 0), // July 28th, 2025
+                  EndTime: new Date(2025, 6, 28, 15, 0),
+                  IsAllDay: false,
+                  Category: 'Planning',
+                  Description: 'Quarterly review of investment performance'
+                },
+                // Weekly Events
+                {
+                  Id: 7,
+                  Subject: 'Grocery Shopping Budget Check',
+                  StartTime: new Date(2025, 6, 3, 10, 0), // July 3rd, 2025
+                  EndTime: new Date(2025, 6, 3, 10, 30),
+                  IsAllDay: false,
+                  Category: 'Planning',
+                  Description: 'Weekly grocery budget: $85'
+                },
+                {
+                  Id: 8,
+                  Subject: 'Expense Tracking Update',
+                  StartTime: new Date(2025, 6, 7, 19, 0), // July 7th, 2025
+                  EndTime: new Date(2025, 6, 7, 19, 30),
+                  IsAllDay: false,
+                  Category: 'Planning',
+                  Description: 'Update expense spreadsheet with weekly transactions'
+                },
+                {
+                  Id: 9,
+                  Subject: 'Mid-Year Financial Review',
+                  StartTime: new Date(2025, 6, 15, 9, 0), // July 15th, 2025
+                  EndTime: new Date(2025, 6, 15, 17, 0),
+                  IsAllDay: true,
+                  Category: 'Planning',
+                  Description: 'Comprehensive mid-year financial assessment'
+                },
+                {
+                  Id: 10,
+                  Subject: 'Emergency Fund Goal Check',
+                  StartTime: new Date(2025, 6, 14, 15, 0), // July 14th, 2025
+                  EndTime: new Date(2025, 6, 14, 15, 30),
+                  IsAllDay: false,
+                  Category: 'Savings',
+                  Description: 'Review progress toward $10,000 emergency fund goal'
+                },
+                {
+                  Id: 11,
+                  Subject: 'Subscription Audit',
+                  StartTime: new Date(2025, 6, 10, 16, 0), // July 10th, 2025
+                  EndTime: new Date(2025, 6, 10, 17, 0),
+                  IsAllDay: false,
+                  Category: 'Planning',
+                  Description: 'Review all monthly subscriptions and cancel unused ones'
+                },
+                {
+                  Id: 12,
+                  Subject: 'Salary Direct Deposit',
+                  StartTime: new Date(2025, 6, 1, 0, 0), // July 1st, 2025
+                  EndTime: new Date(2025, 6, 1, 23, 59),
+                  IsAllDay: true,
+                  Category: 'Income',
+                  Description: 'Monthly salary deposit: $2,500'
+                },
+                {
+                  Id: 13,
+                  Subject: 'Summer Vacation Budget Planning',
+                  StartTime: new Date(2025, 6, 5, 10, 0), // July 5th, 2025
+                  EndTime: new Date(2025, 6, 5, 11, 0),
+                  IsAllDay: false,
+                  Category: 'Planning',
+                  Description: 'Plan and budget for summer vacation expenses'
+                },
+                {
+                  Id: 14,
+                  Subject: 'Quarterly Tax Payment Due',
+                  StartTime: new Date(2025, 6, 31, 12, 0), // July 31st, 2025
+                  EndTime: new Date(2025, 6, 31, 12, 30),
+                  IsAllDay: false,
+                  Category: 'Tax',
+                  Description: 'Q2 estimated tax payment deadline'
+                }
+            ];
+            this.localEvents = [...this.cfg.events];
+        }
     }
 
     if (this.node.id === 'spreadsheet') {
