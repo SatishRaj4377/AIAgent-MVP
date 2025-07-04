@@ -52,7 +52,6 @@ import {
     <ejs-dialog
       [header]="dialogHeader"
       allowDragging="true"
-      width="300px"
       [visible]="true"
       [width]="dialogWidth"
       (close)="onClose()"
@@ -133,6 +132,7 @@ import {
               [saveUrl]="
                 'https://services.syncfusion.com/angular/production/api/spreadsheet/save'
               "
+              (created)="onSpreadsheetCreated()"
             >
             </ejs-spreadsheet>
             <div class="e-footer-content">
@@ -142,7 +142,7 @@ import {
             </div>
           </div>
 
-          <!-- Agent & ChatTrigger could be extended -->
+          <!-- Default -->
           <div *ngSwitchDefault>
             <p>No config needed</p>
           </div>
@@ -175,7 +175,6 @@ export class NodeConfigDialogComponent implements OnInit, AfterViewInit {
   localEvents: any[] = [];
   selectedDate: Date = new Date();
   spreadsheetJson: any = null;
-  sheetReady: boolean = false;
 
   ngOnInit(): void {
     if (!this.node) return;
@@ -192,27 +191,25 @@ export class NodeConfigDialogComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Scheduler rehydration
     if (this.node?.id === 'scheduler' && this.schedulerObj) {
       this.schedulerObj.eventSettings = { dataSource: this.localEvents };
       this.schedulerObj.refreshEvents();
     }
-
-    // Spreadsheet rehydration
-    if (
-      this.node?.id === 'spreadsheet' &&
-      this.spreadsheetJson &&
-      this.spreadsheetObj
-    ) {
-      const workbook = this.spreadsheetJson?.jsonObject?.Workbook;
-      if (workbook?.sheets?.length > 0) {
-        this.spreadsheetObj.openFromJson(this.spreadsheetJson);
-      }
-    }
   }
 
   onSpreadsheetCreated() {
-    this.sheetReady = true;
+    if (this.spreadsheetJson && this.spreadsheetObj) {
+      setTimeout(() => {
+        try {
+          const workbook = this.spreadsheetJson?.jsonObject?.Workbook;
+          if (workbook?.sheets?.length > 0) {
+            this.spreadsheetObj.openFromJson({file: this.spreadsheetJson.jsonObject});
+          }
+        } catch (error) {
+          console.error('Error loading spreadsheet data:', error);
+        }
+      }, 200);
+    }
   }
 
   onSave(): void {
@@ -224,39 +221,25 @@ export class NodeConfigDialogComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      // Manually complete any pending edit
-      if (this.spreadsheetObj && this.spreadsheetObj.element) {
-        const spreadsheetEl = this.spreadsheetObj.element as HTMLElement;
-        const activeInput = spreadsheetEl.querySelector(
-          '.e-spreadsheet-edit'
-        ) as HTMLElement;
-        if (activeInput) {
-          // Trigger blur to commit the value
-          (activeInput as HTMLElement).dispatchEvent(new Event('blur'));
-        }
+      if (this.spreadsheetObj.isEdit) {
+        this.spreadsheetObj.endEdit();
       }
 
-      // Use a short delay to allow the edit to finalize before saving
       setTimeout(() => {
         this.spreadsheetObj.saveAsJson().then((jsonData: any) => {
-          const workbook = jsonData?.jsonObject?.Workbook;
-          if (!workbook || !workbook.sheets || workbook.sheets.length === 0) {
-            alert('Spreadsheet is empty or invalid.');
-            return;
-          }
-
           this.cfg.spreadsheetData = jsonData;
           this.save.emit(this.cfg);
+        }).catch((error: any) => {
+          console.error('Error saving spreadsheet:', error);
+          alert('Error saving spreadsheet data.');
         });
-      }, 10);
+      });
 
       return;
     }
 
-    // Handle other node types
     if (this.node.id === 'scheduler') {
       this.cfg.events = [...this.localEvents];
-      this.schedulerObj.refreshEvents();
     }
 
     this.save.emit(this.cfg);
