@@ -15,6 +15,7 @@ import { WorkflowService } from '../services/workflow.service';
   styleUrls: ['./chat-window.component.css'],
 })
 export class ChatWindowComponent {
+  // Reference to the AI chat component for adding responses
   @ViewChild('aiAssistViewComponent', { static: true })
   public aiAssistViewComponent!: AIAssistViewComponent;
 
@@ -24,31 +25,37 @@ export class ChatWindowComponent {
     private workflowService: WorkflowService
   ) {}
 
+  // Handle user prompt requests and process them through the workflow
   async onPromptRequest(args: PromptRequestEventArgs) {
-    const prompt = args.prompt?.trim();
-    if (!prompt) return;
+    const userPrompt = args.prompt?.trim();
+    if (!userPrompt) return;
 
+    // Reset workflow and start chat trigger
     this.workflowService.reset();
     this.workflowService.setNodeState('chatTrigger', 'loading');
     await this.delay(300);
     this.workflowService.setNodeState('chatTrigger', 'done');
 
+    // Start agent processing
     this.workflowService.setNodeState('agent', 'loading');
 
-    const azure = this.configService.get('azureModel');
-    const agent = this.configService.get('agent');
+    // Get configuration for Azure model and agent
+    const azureModelConfig = this.configService.get('azureModel');
+    const agentConfig = this.configService.get('agent');
 
-    const modelConnected = this.workflowService.isPortConnected(
+    // Check if model is connected and Azure config is valid
+    const isModelConnected = this.workflowService.isPortConnected(
       'agent',
       'modelPort'
-    ); // keep this method
-    const toolNodes = this.workflowService.getConnectedToolNodes(); // keep this method
+    );
+    const connectedToolNodes = this.workflowService.getConnectedToolNodes();
 
+    // Validate Azure connection and configuration
     if (
-      !modelConnected ||
-      !azure?.endpoint ||
-      !azure?.key ||
-      !azure?.deploymentName
+      !isModelConnected ||
+      !azureModelConfig?.endpoint ||
+      !azureModelConfig?.key ||
+      !azureModelConfig?.deploymentName
     ) {
       this.workflowService.setNodeState('agent', 'error');
       this.aiAssistViewComponent.addPromptResponse(
@@ -57,86 +64,103 @@ export class ChatWindowComponent {
       return;
     }
 
+    // Start Azure model processing
     this.workflowService.setNodeState('azureModel', 'loading');
 
-    const toolContext = [];
-    for (const tool of toolNodes) {
-      this.workflowService.setNodeState(tool.id as any, 'loading');
-      const toolCfg = this.configService.get(tool.id as any);
-      if (tool.id === 'fetchApi' && toolCfg?.apiUrl) {
+    // Collect context from all connected tools
+    const toolContextData = [];
+    for (const toolNode of connectedToolNodes) {
+      this.workflowService.setNodeState(toolNode.id as any, 'loading');
+      const toolConfiguration = this.configService.get(toolNode.id as any);
+      
+      // Process Fetch API tool
+      if (toolNode.id === 'fetchApi' && toolConfiguration?.apiUrl) {
         try {
-          const data = await fetch(toolCfg.apiUrl).then((r) => r.json());
-          toolContext.push(
-            `Tool: Fetch API\nData:\n${JSON.stringify(data, null, 2)}`
+          const apiData = await fetch(toolConfiguration.apiUrl).then((response) => response.json());
+          toolContextData.push(
+            `Tool: Fetch API\nData:\n${JSON.stringify(apiData, null, 2)}`
           );
-          this.workflowService.setNodeState(tool.id, 'done');
+          this.workflowService.setNodeState(toolNode.id, 'done');
         } catch {
-          this.workflowService.setNodeState(tool.id, 'error');
+          this.workflowService.setNodeState(toolNode.id, 'error');
         }
       }
-      if (tool.id === 'scheduler' && toolCfg?.events?.length > 0) {
-        const plans = toolCfg.events
+      
+      // Process Scheduler tool
+      if (toolNode.id === 'scheduler' && toolConfiguration?.events?.length > 0) {
+        const scheduledPlans = toolConfiguration.events
           .map(
-            (e: any, i: number) =>
-              `• ${e.Subject} on ${new Date(e.StartTime).toLocaleString()}`
+            (event: any) =>
+              `• ${event.Subject} on ${new Date(event.StartTime).toLocaleString()}`
           )
           .join('\n');
-        toolContext.push(`Tool: Scheduler\nScheduled Plans:\n${plans}`);
-        this.workflowService.setNodeState(tool.id, 'done');
+        toolContextData.push(`Tool: Scheduler\nScheduled Plans:\n${scheduledPlans}`);
+        this.workflowService.setNodeState(toolNode.id, 'done');
       }
+      
+      // Process Spreadsheet tool
       if (
-        tool.id === 'spreadsheet' &&
-        toolCfg?.spreadsheetData?.jsonObject?.Workbook?.sheets
+        toolNode.id === 'spreadsheet' &&
+        toolConfiguration?.spreadsheetData?.jsonObject?.Workbook?.sheets
       ) {
-        const sheets = toolCfg.spreadsheetData.jsonObject.Workbook.sheets;
+        const worksheets = toolConfiguration.spreadsheetData.jsonObject.Workbook.sheets;
+        const sheetTextData: string[] = [];
 
-        const sheetText: string[] = [];
+        // Process each worksheet
+        for (const worksheet of worksheets) {
+          const worksheetRows = worksheet.rows || [];
+          const rowLines: string[] = [];
 
-        for (const sheet of sheets) {
-          const rows = sheet.rows || [];
-          const lines: string[] = [];
-
-          for (const row of rows) {
-            const cells = row.cells || [];
-            const cellValues = cells
+          // Process each row in the worksheet
+          for (const row of worksheetRows) {
+            const rowCells = row.cells || [];
+            const cellValues = rowCells
               .map((cell: any) => cell?.value ?? '')
-              .filter((v:string) => v !== '');
+              .filter((cellValue: string) => cellValue !== '');
+            
             if (cellValues.length > 0) {
-              lines.push(cellValues.join(' | '));
+              rowLines.push(cellValues.join(' | '));
             }
           }
 
-          if (lines.length > 0) {
-            sheetText.push(
-              `Sheet: ${sheet.name || 'Unnamed'}\n${lines.join('\n')}`
+          // Add worksheet data if it has content
+          if (rowLines.length > 0) {
+            sheetTextData.push(
+              `Sheet: ${worksheet.name || 'Unnamed'}\n${rowLines.join('\n')}`
             );
           }
         }
 
-        if (sheetText.length > 0) {
-          toolContext.push(`Tool: Spreadsheet\n${sheetText.join('\n\n')}`);
+        // Add spreadsheet context
+        if (sheetTextData.length > 0) {
+          toolContextData.push(`Tool: Spreadsheet\n${sheetTextData.join('\n\n')}`);
         } else {
-          toolContext.push(`Tool: Spreadsheet\n(No visible data)`);
+          toolContextData.push(`Tool: Spreadsheet\n(No visible data)`);
         }
 
-        this.workflowService.setNodeState(tool.id, 'done');
+        this.workflowService.setNodeState(toolNode.id, 'done');
       }
     }
 
-    const context = `${
-      agent?.systemMessage || 'You are an AI agent.'
-    }\n\n${toolContext.join('\n\n')}\n\nUser query: ${prompt}`;
+    // Build complete context for AI model
+    const completeContext = `${
+      agentConfig?.systemMessage || 'You are an AI agent.'
+    }\n\n${toolContextData.join('\n\n')}\n\nUser query: ${userPrompt}`;
 
+    // Send request to Azure OpenAI and handle response
     try {
-      const response = await this.azureService.generateResponse(context, {
-        endpoint: azure.endpoint,
-        key: azure.key,
-        deploymentName: azure.deploymentName,
+      const aiResponse = await this.azureService.generateResponse(completeContext, {
+        endpoint: azureModelConfig.endpoint,
+        key: azureModelConfig.key,
+        deploymentName: azureModelConfig.deploymentName,
       });
+      
+      // Mark successful completion
       this.workflowService.setNodeState('azureModel', 'done');
       this.workflowService.setNodeState('agent', 'done');
-      this.aiAssistViewComponent.addPromptResponse(response);
+      this.aiAssistViewComponent.addPromptResponse(aiResponse);
     } catch {
+      // Handle Azure OpenAI call failure
       this.workflowService.setNodeState('azureModel', 'error');
       this.workflowService.setNodeState('agent', 'error');
       this.aiAssistViewComponent.addPromptResponse(
@@ -144,7 +168,9 @@ export class ChatWindowComponent {
       );
     }
   }
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+
+  // Helper method to add delay for better user experience
+  private delay(milliseconds: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 }
