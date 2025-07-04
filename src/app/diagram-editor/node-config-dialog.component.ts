@@ -180,6 +180,10 @@ export class NodeConfigDialogComponent implements OnInit, AfterViewInit {
     if (!this.node) return;
 
     this.cfg = { ...(this.node.addInfo || {}) };
+    // Default value for azure credentials
+    this.cfg.endpoint = this.cfg.endpoint || 'https://karkuvelmindmapaiservice.openai.azure.com/';
+    this.cfg.key = this.cfg.key || 'ea8e6945340144d5a50b34b1a0d3bcac';
+    this.cfg.deploymentName = this.cfg.deploymentName || 'GPT-35-Turbo';
 
     if (this.node.id === 'scheduler') {
       this.localEvents = [...(this.cfg.events || [])];

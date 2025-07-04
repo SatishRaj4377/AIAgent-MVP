@@ -17,6 +17,7 @@ import {
   ConnectorModel,
   NodeConstraints,
   AnnotationConstraints,
+  SnapConstraints,
 } from '@syncfusion/ej2-angular-diagrams';
 import { ConfigService } from '../services/config.service';
 import { NodeConfigDialogComponent } from './node-config-dialog.component';
