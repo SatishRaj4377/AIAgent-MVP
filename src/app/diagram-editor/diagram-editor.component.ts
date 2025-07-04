@@ -14,7 +14,6 @@ import {
   PortVisibility,
   DiagramTools,
   DiagramComponent,
-  Diagram,
   ConnectorModel,
   NodeConstraints,
   AnnotationConstraints,
@@ -256,14 +255,36 @@ export class DiagramEditorComponent
     if (!node) return;
 
     const colorMap: Record<NodeState['status'], string> = {
-      idle: '#333',
-      loading: '#ffe082', // yellow
-      done: '#4caf50', // green
-      error: '#e57373', // red
+      idle: '#2D3748',     // Modern dark gray
+      loading: '#F6AD55',  // Modern orange
+      done: '#48BB78',     // Modern green
+      error: '#F56565',    // Modern red
+    };
+
+    const textColorMap: Record<NodeState['status'], string> = {
+      idle: '#FFFFFF',
+      loading: '#1A202C',
+      done: '#FFFFFF',
+      error: '#FFFFFF',
     };
 
     node.style = node.style || {};
     node.style.fill = colorMap[state.status];
+    
+    // Update annotation colors
+    if (node.annotations) {
+      node.annotations.forEach(annotation => {
+        if (annotation.style) {
+          annotation.style.color = textColorMap[state.status];
+        }
+      });
+    }
+    
     this.diagram?.dataBind();
   }
+
+  onDiagramCreated(): void {
+    this.diagram?.fitToPage();
+  }
+
 }
